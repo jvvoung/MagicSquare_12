@@ -1,0 +1,18 @@
+[project]
+name = "magicsquare"
+version = "0.1.0"
+description = "Magic square generation and validation"
+requires-python = ">=3.10"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.coverage.run]
+source = ["entity", "control"]
+
+[tool.coverage.report]
+fail_under = 80
+
+[tool.black]
+line-length = 88

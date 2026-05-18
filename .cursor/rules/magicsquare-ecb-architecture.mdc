@@ -1,0 +1,43 @@
+---
+description: ECB 레이어 역할, 의존 방향, C++ 디렉터리 구조
+globs: "{include,src}/**/*.{hpp,h,cpp,cc}"
+alwaysApply: false
+---
+
+# ECB 아키텍처
+
+## 레이어
+
+```
+boundary  →  control  →  entity
+ (I/O)      (use case)   (도메인)
+```
+
+| 레이어 | 역할 | 예시 |
+|--------|------|------|
+| **entity** | `MagicSquare`, `Order`, 검증·Siamese 알고리즘 | `entity/magic_square.hpp` |
+| **control** | 유스케이스 조율, entity 조합 | `control/generate_magic_square.hpp` |
+| **boundary** | CLI/API, 입출력·형식 변환 | `boundary/cli/main.cpp` |
+
+## 의존성 (단방향)
+
+- ✅ boundary → control → entity
+- ❌ entity → control / boundary
+- ❌ control → boundary
+- ❌ boundary가 entity를 **직접** include (control 경유)
+
+## 레이어별 금지
+
+- **entity**: `std::cout`, 파일·네트워크 I/O, GoogleTest include
+- **control**: `printf`, `std::cin`, UI 프레임워크
+- **boundary**: 마방진 알고리즘·magic constant 계산 직접 구현
+
+## 디렉터리 (권장)
+
+```
+include/magicsquare/{entity,control,boundary}/
+src/{entity,control,boundary}/
+tests/{entity,control,boundary}/
+```
+
+헤더는 `include/`, 구현은 `src/`에 두고, 네임스페이스 `magicsquare::entity` 등으로 레이어를 구분한다.

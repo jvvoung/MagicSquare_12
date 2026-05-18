@@ -1,0 +1,122 @@
+# MagicSquare (C++) — 프로젝트 규칙
+
+n×n 격자에 1~n²를 중복 없이 배치해 행·열·대각선 합이 동일한 **마방진**을 생성·검증한다.
+**ECB(Entity-Control-Boundary)** + **TDD** + **C++17** + **CMake** + **GoogleTest**.
+
+## 도메인 용어
+
+| 용어 | 정의 |
+|------|------|
+| order | 차수 n (격자 한 변) |
+| magic constant | 공통 합: `n * (n² + 1) / 2` |
+| Siamese method | 홀수 차수 생성 알고리즘 (기본) |
+
+**범위**: 홀수 차수 생성·검증, 잘못된 입력(n ≤ 0, 짝수 n) 명시적 예외  
+**범위 외**: 짝수·특수 알고리즘(별도 요구 전), GUI·웹(boundary 스켈레톤만)
+
+---
+
+## 코드 스타일
+
+- C++17, [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html)
+- `clang-format`, `clang-tidy`, 최대 줄 길이 100
+- **네이밍**: 타입 `PascalCase`, 함수·변수 `snake_case`, 상수 `kPascalCase`/`UPPER_SNAKE`, 네임스페이스 소문자, 파일 `snake_case.hpp/.cpp`
+- **헤더**: `#pragma once`, 공개 API는 `.hpp` / 구현 `.cpp`, include 순서: 자기 헤더 → C → C++ → 서드파티 → 프로젝트
+- **문서**: public API에 Doxygen (`///`)
+
+---
+
+## ECB 아키텍처
+
+```
+boundary  →  control  →  entity
+ (I/O)      (use case)   (도메인)
+```
+
+| 레이어 | 역할 | 예시 |
+|--------|------|------|
+| entity | MagicSquare, Order, 검증, Siamese | `entity/magic_square.hpp` |
+| control | 유스케이스 조율 | `control/generate_magic_square.hpp` |
+| boundary | CLI/API, 입출력 | `boundary/cli/main.cpp` |
+
+**의존 (단방향)**  
+- ✅ boundary → control → entity  
+- ❌ entity → control/boundary, control → boundary, boundary → entity 직접 include
+
+**레이어별 금지**  
+- entity: `std::cout`, 파일·네트워크 I/O, GoogleTest include  
+- control: `std::cin`, `printf`, UI 프레임워크  
+- boundary: 마방진 알고리즘·magic constant 직접 구현
+
+---
+
+## TDD
+
+| 단계 | 할 일 | 금지 |
+|------|--------|------|
+| **red** | `tests/`에 실패 테스트 먼저, «미구현»으로 실패 확인 | 프로덕션만 추가 |
+| **green** | 통과에 필요한 최소 코드만 | 리팩터링·API 변경 |
+| **refactor** | 동작 유지·구조 개선, 커버리지 80%+ | 기능 추가 혼입 |
+
+---
+
+## 테스트
+
+- **GoogleTest**, 패턴 **AAA**
+- 실행: `ctest --output-on-failure`
+- 파일: `tests/{entity,control,boundary}/test_<module>.cpp`
+- 명명: `TEST(Suite, BehaviorDescription)`
+- 필수: n=1,3,5 정상 / n≤0·짝수 오류 / magic constant·중복·범위 검증
+
+---
+
+## 금지 패턴
+
+| 금지 | 대안 |
+|------|------|
+| entity/control에서 `std::cout`, `printf` | boundary 출력, spdlog |
+| 매직 넘버 (`n==3`, `sum==15`) | `magic_constant(order)`, `Order` |
+| `catch (...)` 만으로 삼키기 | 구체 예외 catch·재throw |
+| entity/control I/O | boundary로 이동 |
+| boundary → entity 직접 include | control use case |
+| public API without test | red에서 `test_*.cpp` 먼저 |
+| 헤더 `using namespace std` | `std::` 접두사 |
+| raw `new`/`delete` | `std::unique_ptr`, 값 타입 |
+
+---
+
+## 디렉터리 구조
+
+```
+MagicSquare_12/
+├── .cursorrules
+├── .cursor/rules/              # 파일별 상세 규칙 (선택 참조)
+├── CMakeLists.txt
+├── include/magicsquare/{entity,control,boundary}/
+├── src/{entity,control,boundary}/
+└── tests/{entity,control,boundary}/
+```
+
+---
+
+## AI 동작
+
+**코딩 전**: `tests/` 확인, 대상 레이어 명시, 의존 방향 검토  
+**코딩 중**: Doxygen, ECB 준수, green은 최소 구현만  
+**코딩 후**: `ctest` 제안, 커버리지 80% 미만 시 안내, forbidden 점검  
+**응답**: 레이어·파일 경로, TDD 단계(red/green/refactor) 표기  
+**금지**: 문서 없는 public API 대량 추가, green 중 대규모 리팩터, 본 규칙 외 임의 아키텍처
+
+---
+
+## 상세 규칙 (파일별)
+
+`.cursor/rules/` — 특정 파일 작업 시 자동 적용:
+
+| 파일 | 내용 |
+|------|------|
+| `magicsquare-project.mdc` | 프로젝트 개요 |
+| `magicsquare-ecb-architecture.mdc` | ECB·디렉터리 |
+| `magicsquare-cpp-code-style.mdc` | C++ 스타일 |
+| `magicsquare-tdd-testing.mdc` | TDD·GoogleTest |
+| `magicsquare-forbidden.mdc` | 금지 패턴 |

@@ -1,0 +1,26 @@
+---
+description: 금지 패턴과 권장 대안 (C++/ECB/TDD)
+alwaysApply: true
+---
+
+# 금지 패턴
+
+| 금지 | 이유 | 대안 |
+|------|------|------|
+| `std::cout` / `printf` 디버깅 (entity·control) | ECB 위반, 테스트 불안정 | boundary 출력, `spdlog` 등 (레이어별) |
+| 매직 넘버 (`if (n == 3)`, `sum == 15`) | 의미 불명, 유지보수 어려움 | `magic_constant(order)`, `Order` 타입 |
+| `catch (...)` 만으로 삼키기 | 오류 은폐 | 구체 타입 catch 후 재throw·도메인 예외 |
+| entity/control에서 `std::cin`, 파일 I/O | 레이어 침범 | boundary로 이동 |
+| boundary에서 entity 직접 `#include` | 의존 방향 위반 | control use case 호출 |
+| public API without test | TDD 위반 | red 단계에서 `test_*.cpp` 먼저 |
+| `using namespace std;` (헤더) | 이름 충돌 | 구현 파일에서만 제한적 사용 |
+| raw `new`/`delete` (소유권 불명확) | 누수·예외 안전 | `std::unique_ptr`, 값 타입 |
+| 전역 mutable 상태 | 테스트 격리 실패 | 의존성 주입·지역 상태 |
+
+## AI 코딩 시
+
+**전**: 관련 `tests/` 확인, 대상 레이어 명시, 의존 방향 검토  
+**중**: green은 최소 구현만; refactor는 사용자 요청 또는 green 완료 후  
+**후**: `ctest` 제안, 커버리지 80% 미만 시 부족 영역 안내, forbidden 자체 점검
+
+응답에 **레이어·파일 경로**와 **TDD 단계(red/green/refactor)** 를 표기한다.

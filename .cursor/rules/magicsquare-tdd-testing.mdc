@@ -1,0 +1,52 @@
+---
+description: TDD red/green/refactor, GoogleTest, AAA, 커버리지
+globs: "tests/**/*.{cpp,hpp}"
+alwaysApply: false
+---
+
+# TDD 및 테스트
+
+## 프레임워크
+
+- **GoogleTest** + **GoogleMock** (control 경계 mock 시)
+- 패턴: **AAA** (Arrange–Act–Assert)
+- 실행: `ctest` 또는 `build/tests/magicsquare_tests`
+
+## TDD 3단계
+
+| 단계 | 할 일 | 금지 |
+|------|--------|------|
+| **red** | 실패 테스트 먼저 작성·실행, «미구현»으로 실패 확인 | 프로덕션만 추가, 통과 테스트를 red 목표로 |
+| **green** | 테스트 통과에 필요한 **최소** 코드만 | 리팩터링·최적화·API 변경 |
+| **refactor** | 동작 유지하며 구조 개선, 전체 테스트·커버리지 80%+ | 기능 추가를 refactor에 혼입 |
+
+## 테스트 레이아웃
+
+```
+tests/entity/     — 도메인·알고리즘 단위
+tests/control/    — 유스케이스 (entity mock 최소)
+tests/boundary/   — CLI 통합
+```
+
+## 명명
+
+- 파일: `test_<module>.cpp` (예: `test_magic_square.cpp`)
+- suite: `TEST(SuiteName, BehaviorDescription)` 또는 `TEST_F`
+- fixture: `SetUp` / `TearDown`에서 격리
+
+## 필수 케이스
+
+- n=1, n=3, n=5 정상 생성
+- n ≤ 0, 짝수 n 등 오류
+- magic constant, 중복·범위 검증
+
+## 커버리지
+
+```bash
+cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=ON ..
+cmake --build .
+ctest
+# gcov/llvm-cov — entity·control 80% 이상
+```
+
+public 함수·메서드 추가 시 **테스트 없이 커밋 금지**.
